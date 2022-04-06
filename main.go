@@ -7,7 +7,11 @@ import (
 	"io"
 	"os"
 
+	"github.com/keyneston/mkpf/extensions"
 	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/parser"
+	"github.com/yuin/goldmark/renderer"
+	"github.com/yuin/goldmark/util"
 )
 
 func main() {
@@ -56,9 +60,26 @@ func convert(input io.Reader, output io.Writer) error {
 		return fmt.Errorf("Error reading input: %w", err)
 	}
 
-	if err := goldmark.Convert(buf.Bytes(), output); err != nil {
+	converter := goldmark.New(getExtensions()...)
+	if err := converter.Convert(buf.Bytes(), output); err != nil {
 		return fmt.Errorf("Error converting input: %w", err)
 	}
 
 	return nil
+}
+
+func getExtensions() []goldmark.Option {
+	return []goldmark.Option{
+		goldmark.WithParserOptions(
+			parser.WithInlineParsers(
+				util.PrioritizedValue{&extensions.TOCParser{}, 1},
+			),
+		),
+
+		goldmark.WithRendererOptions(
+			renderer.WithNodeRenderers(
+				util.PrioritizedValue{&extensions.TOCRenderer{}, 1},
+			),
+		),
+	}
 }
