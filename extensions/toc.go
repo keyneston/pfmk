@@ -38,18 +38,20 @@ type TOCParser struct {
 var _ parser.InlineParser = (*TOCParser)(nil)
 
 var (
-	_open  = []byte("((")
-	_hash  = []byte{'+'}
-	_close = []byte("))")
+	_open   = []byte("((")
+	_indent = []byte{'+'}
+	_close  = []byte("))")
+	trimset = " \t"
 )
 
 // Trigger returns characters that trigger this parser.
 func (p *TOCParser) Trigger() []byte {
-	return []byte{'('}
+	return []byte{' ', '(', '\t'}
 }
 
 func (p *TOCParser) Parse(_ ast.Node, block text.Reader, _ parser.Context) ast.Node {
 	line, seg := block.PeekLine()
+	line = bytes.TrimLeft(line, trimset)
 	if !bytes.HasPrefix(line, _open) {
 		return nil
 	}
@@ -60,7 +62,7 @@ func (p *TOCParser) Parse(_ ast.Node, block text.Reader, _ parser.Context) ast.N
 	}
 	log.Printf("Line: %q, Seg: %#v, Start: %c, Stop: %v", string(line), seg, seg.Start, stop)
 
-	seg = text.NewSegment(seg.Start+2, seg.Start+stop)
+	seg = text.NewSegment(seg.Start+len(_open), seg.Start+stop)
 
 	n := &TOCNode{Content: block.Value(seg)}
 
