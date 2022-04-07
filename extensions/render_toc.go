@@ -2,7 +2,6 @@ package extensions
 
 import (
 	"fmt"
-	"log"
 	"sync"
 
 	"github.com/yuin/goldmark/ast"
@@ -31,11 +30,10 @@ func (r *TOCRenderer) RegisterFuncs(reg renderer.NodeRendererFuncRegisterer) {
 func (r *TOCRenderer) Render(w util.BufWriter, _ []byte, node ast.Node, entering bool) (ast.WalkStatus, error) {
 	r.init()
 
-	n, ok := node.(*TOCNode)
+	_, ok := node.(*TOCPlaceholderNode)
 	if !ok {
-		return ast.WalkStop, fmt.Errorf("unexpected node %T, expected *extensions.TOCNode", node)
+		return ast.WalkStop, fmt.Errorf("unexpected node %T, expected *extensions.TOCPlaceholderNode", node)
 	}
-	log.Printf("have node: %#v", string(n.Content))
 
 	w.WriteString(``)
 

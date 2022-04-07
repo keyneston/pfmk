@@ -69,6 +69,8 @@ func convert(input io.Reader, output io.Writer) error {
 }
 
 func getExtensions() []goldmark.Option {
+	toc := &extensions.TOCRenderer{}
+
 	return []goldmark.Option{
 		goldmark.WithParserOptions(
 			parser.WithInlineParsers(
@@ -78,7 +80,7 @@ func getExtensions() []goldmark.Option {
 
 		goldmark.WithRendererOptions(
 			renderer.WithNodeRenderers(
-				util.PrioritizedValue{&extensions.TOCRenderer{}, 1},
+				util.PrioritizedValue{toc, 1},
 			),
 		),
 	}

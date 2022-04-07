@@ -2,7 +2,6 @@ package extensions
 
 import (
 	"bytes"
-	"log"
 	"strconv"
 
 	"github.com/yuin/goldmark/ast"
@@ -11,16 +10,16 @@ import (
 )
 
 var TOCKind = ast.NewNodeKind("TableOfContents")
-var _ ast.Node = (*TOCNode)(nil)
+var _ ast.Node = (*TOCPlaceholderNode)(nil)
 
-type TOCNode struct {
+type TOCPlaceholderNode struct {
 	ast.BaseInline
 
 	Level   int
 	Content []byte
 }
 
-func (n *TOCNode) Dump(src []byte, level int) {
+func (n *TOCPlaceholderNode) Dump(src []byte, level int) {
 	ast.DumpHelper(n, src, level, map[string]string{
 		"Level":   strconv.Itoa(n.Level),
 		"Content": string(n.Content),
@@ -28,11 +27,18 @@ func (n *TOCNode) Dump(src []byte, level int) {
 }
 
 // Kind reports the kind of this node.
-func (n *TOCNode) Kind() ast.NodeKind {
+func (n *TOCPlaceholderNode) Kind() ast.NodeKind {
 	return TOCKind
 }
 
+type TOCEntry struct {
+	Level     int
+	Name      string
+	Reference string
+}
+
 type TOCParser struct {
+	Entries []TOCEntry
 }
 
 var _ parser.InlineParser = (*TOCParser)(nil)
@@ -60,11 +66,12 @@ func (p *TOCParser) Parse(_ ast.Node, block text.Reader, _ parser.Context) ast.N
 	if stop < 0 {
 		return nil // must close on the same line
 	}
-	log.Printf("Line: %q, Seg: %#v, Start: %c, Stop: %v", string(line), seg, seg.Start, stop)
 
 	seg = text.NewSegment(seg.Start+len(_open), seg.Start+stop)
 
-	n := &TOCNode{Content: block.Value(seg)}
+	n := &TOCPlaceholderNode{Content: block.Value(seg)}
+
+	p.Entries = append(p.Entries, TOCEntry{Level: 1, Name: string(line), Reference: ""})
 
 	n.AppendChild(n, ast.NewTextSegment(seg))
 	block.Advance(seg.Stop)
