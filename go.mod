@@ -1,4 +1,4 @@
-module github.com/keyneston/mkpf
+module github.com/keyneston/pfmk
 
 go 1.18
 
