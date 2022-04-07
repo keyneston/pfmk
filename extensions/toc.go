@@ -71,7 +71,12 @@ func (p *TOCParser) Parse(_ ast.Node, block text.Reader, _ parser.Context) ast.N
 
 	n := &TOCPlaceholderNode{Content: block.Value(seg)}
 
-	p.Entries = append(p.Entries, TOCEntry{Level: 1, Name: string(line), Reference: ""})
+	// Figure out the indent level:
+	line = bytes.Trim(line, "()")
+	level := bytes.Count(line, _indent)
+	line = bytes.TrimLeft(line, "+")
+
+	p.Entries = append(p.Entries, TOCEntry{Level: level, Name: string(line), Reference: string(line)})
 
 	n.AppendChild(n, ast.NewTextSegment(seg))
 	block.Advance(seg.Stop)
